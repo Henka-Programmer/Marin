@@ -17,6 +17,14 @@ namespace MarinFramework.Sql
 
         private bool _Closed;
 
+        public T ExecuteScalar<T>(string query, params object[] parameters)
+        {
+            using (var npgsqlCommand = new Npgsql.NpgsqlCommand(query, _cnx.Connection, _cnx))
+            {
+                return (T)npgsqlCommand.ExecuteScalar();
+            }
+        }
+
         public string DatabaseName { get; }
 
         /// <summary>
