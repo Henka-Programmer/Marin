@@ -33,7 +33,7 @@ namespace MarinFramework.Sql
         private bool _serialized;
         private NpgsqlTransaction _cnx;
         private Dictionary<string, object> cache;
-
+        public bool HasRows { get => result?.HasRows ?? false; }
         private static void Check(Cursor cr)
         {
             if (cr._Closed)
@@ -109,10 +109,36 @@ namespace MarinFramework.Sql
         }
 
         Npgsql.NpgsqlDataReader result = null;
-        public int Execute(string query, params object[] @params)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>returns the affected rows count</returns>
+        public int Execute(string query, object paramsObj)
+        {
+            var type = paramsObj.GetType();
+            var @params = new List<(string pname, object pvalue)>();
+            foreach (var pinfo in type.GetProperties())
+            {
+                @params.Add((pinfo.Name, pinfo.GetValue(paramsObj)));
+            }
+
+            return Execute(query, @params.ToArray());
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="params"></param>
+        /// <returns>returns the affected rows count</returns>
+        public int Execute(string query, params (string pname, object pvalue)[] @params)
         {
             using (var npgsqlCommand = new Npgsql.NpgsqlCommand(query, _cnx.Connection, _cnx))
             {
+                foreach (var p in @params)
+                {
+                    npgsqlCommand.Parameters.AddWithValue(p.pname, p.pvalue);
+                }
                 result = npgsqlCommand.ExecuteReader();
             }
             return result.RecordsAffected;
@@ -130,7 +156,7 @@ namespace MarinFramework.Sql
 
         public SavePoint SavePoint()
         {
-            return new SavePoint();
+            return new SavePoint(_cnx);
         }
 
         private void Close(bool v)

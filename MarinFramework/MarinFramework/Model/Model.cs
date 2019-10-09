@@ -8,6 +8,20 @@ namespace MarinFramework
 {
     public class Model : INotifyPropertyChanged, IEnumerable
     {
+        internal List<int> _Ids { get; private set; } = new List<int>()
+        public MarinFramework.Environment Env { get; set; }
+        public int Id { get; set; }
+
+        protected virtual object GetValue(Field field)
+        {
+            return field.Read(this);
+        }
+
+        // Using a DependencyProperty as the backing store for MyProperty.  This enables animation, styling, binding, etc...
+        public static readonly Field MyPropertyProperty =
+            Field.Register("MyProperty", typeof(int), typeof(Model));
+
+
         Dictionary<string, object> values;
         public dynamic this[string pname]
         {
@@ -44,7 +58,7 @@ namespace MarinFramework
         public Model Create(object obj)
         {
             return Create(obj);
-        } 
+        }
 
         public virtual void Write(object obj)
         {
@@ -65,5 +79,5 @@ namespace MarinFramework
         {
             throw new NotImplementedException();
         }
-    } 
+    }
 }
