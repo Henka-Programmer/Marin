@@ -8,7 +8,9 @@ namespace MarinFramework
 {
     public class Model : INotifyPropertyChanged, IEnumerable
     {
-        internal List<int> _Ids { get; private set; } = new List<int>()
+        internal Dictionary<string, Field> _Fields;
+
+        internal List<int> _Ids { get; private set; } = new List<int>();
         public MarinFramework.Environment Env { get; set; }
         public int Id { get; set; }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace MarinFramework
@@ -735,27 +736,18 @@ NOTHING = object()
             return _data[field].ContainsKey(record.Id);
         }
 
+        /// <summary>
+        /// Return the value of field for record
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="record"></param>
+        /// <param name="field"></param>
+        /// <param name="default"></param>
+        /// <returns></returns>
         public T Get<T>(Model record, Field field, T @default = default(T))
         {
-            try
-            {
-                var v = _data[field][record._Ids[0]];
-                //if (field.DependsContext)
-                //{
-                //    v = v[field.GetCashKey(record.Env)];
-                //}
-                return v;
-            }
-            catch (Exception)
-            {
-
-                throw;
-            }
-        }
-    }
-    /*
-class Cache(object): 
-    def get(self, record, field, default=NOTHING):
+            /*
+              def get(self, record, field, default=NOTHING):
         """ Return the value of ``field`` for ``record``. """
         try:
             value = self._data[field][record._ids[0]]
@@ -766,16 +758,59 @@ class Cache(object):
             if default is NOTHING:
                 raise CacheMiss(record, field)
             return default
+             */
+            try
+            {
+                var v = _data[field][record._Ids[0]];
+                //if (field.DependsContext)
+                //{
+                //    v = v[field.GetCashKey(record.Env)];
+                //}
+                return (T)v;
+            }
+            catch (KeyNotFoundException)
+            {
+                throw;
+            }
+        }
 
-    def set(self, record, field, value):
+        /// <summary>
+        /// Set the value of field for record
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void Set<T>(Model record, Field field, object value)
+        {
+            /*
+              def set(self, record, field, value):
         """ Set the value of ``field`` for ``record``. """
         if field.depends_context:
             key = field.cache_key(record.env)
             self._data[field].setdefault(record._ids[0], {})[key] = value
         else:
             self._data[field][record._ids[0]] = value
+             */
+            if (field.DependsContext)
+            {
+                var key = field.GetCashKey(record.Env);
+                var d = (Dictionary<object, object>)_data[field][record._Ids[0]];
+                d[key] = value;
+            }
+            else
+            {
+                _data[field][record._Ids[0]] = value;
+            }
+        }
 
-    def update(self, records, field, values):
+        /// <summary>
+        /// Set the values of field for several records.
+        /// </summary>
+        /// <param name="records"></param>
+        /// <param name="field"></param>
+        /// <param name="values"></param>
+        public void Update(Model records, Field field, object[] values)
+        {
+            /*
+              def update(self, records, field, values):
         """ Set the values of ``field`` for several ``records``. """
         if field.depends_context:
             key = field.cache_key(records.env)
@@ -785,14 +820,58 @@ class Cache(object):
         else:
             self._data[field].update(zip(records._ids, values))
 
-    def remove(self, record, field):
+             */
+            if (field.DependsContext)
+            {
+                var key = field.GetCashKey(records.Env);
+                var fieldCashe = _data[field];
+                foreach ((int recordId, object value) in records._Ids.Zip(values, (x, y) => (x, y)))
+                {
+                    var c = (Dictionary<object, object>)fieldCashe[recordId];
+                    c[key] = value;
+                }
+            }
+            else
+            {
+                _data[field].Update(records._Ids.Zip(values, (id, v) => { return (id, v); }).ToDictionary(k => (object)k.id, v => v.v));
+            }
+        }
+
+        /// <summary>
+        /// Remove the value of field for record
+        /// </summary>
+        /// <param name="record"></param>
+        /// <param name="field"></param>
+        public void Remove(Model record, Field field)
+        {
+            /*
+             * def remove(self, record, field):
         """ Remove the value of ``field`` for ``record``. """
         try:
             del self._data[field][record.id]
         except KeyError:
             pass
+             */
+            try
+            {
+                _data[field]?.Remove(record.Id);
+            }
+            catch (KeyNotFoundException)
+            {
+                // swallow
+            }
+        }
 
-    def get_values(self, records, field):
+        /// <summary>
+        /// Return the cached values of field for records.
+        /// </summary>
+        /// <param name="records"></param>
+        /// <param name="field"></param>
+        /// <returns></returns>
+        public IEnumerable<object> GetValues(Model records, Field field)
+        {
+            /*
+             def get_values(self, records, field):
         """ Return the cached values of ``field`` for ``records``. """
         field_cache = self._data[field]
         key = field.cache_key(records.env) if field.depends_context else None
@@ -804,8 +883,33 @@ class Cache(object):
                     yield field_cache[record_id]
             except KeyError:
                 pass
+             */
+            var field_cache = _data[field];
+            var key = field.DependsContext ? field.GetCashKey(records.Env) : null;
+            foreach (var recordId in records._Ids)
+            {
+                if (key != null)
+                {
+                    yield return ((Dictionary<object, object>)field_cache[recordId])[key];
+                }
+                else
+                {
+                    yield return field_cache[recordId];
+                }
 
-    def get_records_different_from(self, records, field, value):
+            }
+        }
+
+        /// <summary>
+        ///  Return the subset of records that has not value for field. 
+        /// </summary>
+        /// <param name="records"></param>
+        /// <param name="field"></param>
+        /// <param name="value"></param>
+        public TModel GetRecordsDifferentFrom<TModel>(TModel records, Field field, object value) where TModel : Model
+        {
+            /*
+              def get_records_different_from(self, records, field, value):
         """ Return the subset of ``records`` that has not ``value`` for ``field``. """
         field_cache = self._data[field]
         key = field.cache_key(records.env) if field.depends_context else None
@@ -823,7 +927,54 @@ class Cache(object):
                     ids.append(record_id)
         return records.browse(ids)
 
-    def get_fields(self, record):
+             */
+            var field_cache = _data[field];
+            var key = field.DependsContext ? field.GetCashKey(records.Env) : null;
+            var ids = new List<int>();
+            foreach (var recordId in records._Ids)
+            {
+                object val = null;
+                try
+                {
+                    if (key != null)
+                    {
+                        var c = (Dictionary<object, object>)field_cache;
+                        if (c != null)
+                        {
+                            val = c[key];
+                        }
+                    }
+                    else
+                    {
+                        val = field_cache[recordId];
+                    }
+                }
+                catch (KeyNotFoundException)
+                {
+                    ids.Add(recordId);
+                }
+                catch
+                {
+                    if (val != value)
+                    {
+                        ids.Add(recordId);
+                    }
+                }
+            }
+
+            return records.Browse(ids.ToArray());
+        }
+
+        /// <summary>
+        /// Return the fields with a value for record.
+        /// </summary>
+        /// <typeparam name="TModel"></typeparam>
+        /// <param name="records"></param>
+        /// <returns></returns>
+        public IEnumerable<Field> GetFields<TModel>(TModel record) where TModel : Model
+        {
+            /* 
+            def get_fields(self, record):
         """ Return the fields with a value for ``record``. """
         for name, field in record._fields.items():
             if name == 'id':
@@ -834,80 +985,195 @@ class Cache(object):
             if field.depends_context and field.cache_key(record.env) not in values[record.id]:
                 continue
             yield field
+             */
+            foreach ((string name, Field field) in record._Fields.Items())
+            {
+                if (name == "id")
+                {
+                    continue;
+                }
+                var values = _data.Get(field, @default: new Dictionary<object, object>());
+                if (!values.ContainsKey(record.Id))
+                {
+                    continue;
+                }
+                if (field.DependsContext)
+                {
+                    var key = field.GetCashKey(record.Env);
+                    var d = (Dictionary<object, object>)values[record.Id];
+                    if (!d.ContainsKey(key))
+                    {
+                        continue;
+                    }
+                }
 
-    def get_records(self, model, field):
+                yield return field;
+            }
+        }
+
+        public TModel GetRecords<TModel>(TModel model, Field field) where TModel : Model
+        {
+            /*
+              def get_records(self, model, field):
         """ Return the records of ``model`` that have a value for ``field``. """
         ids = list(self._data[field])
         return model.browse(ids)
+             */
+            var ids = _data[field].Values.Cast<int>().ToArray();
+            return model.Browse(ids);
+        }
 
-    def get_missing_ids(self, records, field):
+        /// <summary>
+        /// Return the ids of records that have no value for field.
+        /// </summary>
+        /// <typeparam name="TModel"></typeparam>
+        /// <param name="records"></param>
+        /// <param name="field"></param>
+        public IEnumerable<int> GetMissingIds<TModel>(TModel records, Field field) where TModel : Model
+        {
+            /*
+                def get_missing_ids(self, records, field):
         """ Return the ids of ``records`` that have no value for ``field``. """
         field_cache = self._data[field]
         for record_id in records._ids:
             if record_id not in field_cache:
-                yield record_id
+                yield record_id 
+             */
+            var fieldCache = _data[field];
+            foreach (var recordId in records._Ids)
+            {
+                if (!fieldCache.ContainsKey(recordId))
+                {
+                    yield return recordId;
+                }
+            }
+        }
 
-    def invalidate(self, spec=None):
-        """ Invalidate the cache, partially or totally depending on ``spec``. """
-        if spec is None:
-            self._data.clear()
-        elif spec:
-            for field, ids in spec:
-                if ids is None:
-                    self._data.pop(field, None)
-                else:
-                    field_cache = self._data.get(field)
-                    if field_cache:
-                        for id in ids:
-                            field_cache.pop(id, None)
+        /// <summary>
+        /// Invalidate the cache, partially or totally depending on spec. 
+        /// </summary>
+        /// <param name="spec"></param>
+        public void Invalidate(Dictionary<Field, int[]> spec = null)
+        {
+            /*
+             *   def invalidate(self, spec=None):
+            """ Invalidate the cache, partially or totally depending on ``spec``. """
+            if spec is None:
+                self._data.clear()
+            elif spec:
+                for field, ids in spec:
+                    if ids is None:
+                        self._data.pop(field, None)
+                    else:
+                        field_cache = self._data.get(field)
+                        if field_cache:
+                            for id in ids:
+                                field_cache.pop(id, None)
 
-    def check(self, env):
-        """ Check the consistency of the cache for the given environment. """
-        # flush fields to be recomputed before evaluating the cache
-        env['res.partner'].recompute()
+             */
+            if (spec == null)
+            {
+                _data.Clear();
+            }
+            else if (spec != null)
+            {
+                foreach ((Field field, int[] ids) in spec.Items())
+                {
+                    if (ids == null || ids.Length == 0)
+                    {
+                        _data.Remove(field);
+                    }
+                    else
+                    {
+                        var fieldCache = _data.Get(field);
+                        if (fieldCache != null)
+                        {
+                            foreach (var id in ids)
+                            {
+                                fieldCache.Remove(id);
+                            }
+                        }
+                    }
+                }
+            }
 
-        # make a full copy of the cache, and invalidate it
-        dump = defaultdict(dict)
-        key_cache = self._data
-        for field, field_cache in key_cache.items():
-            for record_id, value in field_cache.items():
-                if record_id:
-                    dump[field][record_id] = value
+        }
 
-        self.invalidate()
+        /// <summary>
+        /// Check the consistency of the cache for the given environment.
+        /// </summary>
+        /// <param name="env"></param>
+        public void Check(Environment env)
+        {
+            // flush fields to be recomputed before evaluating the cache
+            // env['res.partner'].recompute()
 
-        # re-fetch the records, and compare with their former cache
-        invalids = []
-        for field, field_dump in dump.items():
-            records = env[field.model_name].browse(field_dump)
-            for record in records:
-                try:
-                    cached = field_dump[record.id]
-                    if field.depends_context:
-                        for context_keys, value in cached.items():
-                            context = dict(zip(field.depends_context, context_keys))
-                            value = field.convert_to_record(value, record)
-                            fetched = record.with_context(context)[field.name]
+            // make a full copy of the cache, and invalidate it
+            var dump = new Dictionary<object, Dictionary<object, object>>();
+            var keyCache = _data;
+            foreach ((Field field, Dictionary<object, object> fieldCache) in keyCache.Items())
+            {
+                dump.SetDefault(field, new Dictionary<object, object>());
+                foreach ((object recordId, object value) in fieldCache.Items())
+                {
+                    if (recordId != null)
+                    {
+                        dump[field][recordId] = value;
+                    }
+                }
+            }
+
+            Invalidate();
+        }
+        /*
+    class Cache(object):    
+        def check(self, env):
+            """ Check the consistency of the cache for the given environment. """
+            # flush fields to be recomputed before evaluating the cache
+            env['res.partner'].recompute()
+
+            # make a full copy of the cache, and invalidate it
+            dump = defaultdict(dict)
+            key_cache = self._data
+            for field, field_cache in key_cache.items():
+                for record_id, value in field_cache.items():
+                    if record_id:
+                        dump[field][record_id] = value
+
+            self.invalidate()
+
+            # re-fetch the records, and compare with their former cache
+            invalids = []
+            for field, field_dump in dump.items():
+                records = env[field.model_name].browse(field_dump)
+                for record in records:
+                    try:
+                        cached = field_dump[record.id]
+                        if field.depends_context:
+                            for context_keys, value in cached.items():
+                                context = dict(zip(field.depends_context, context_keys))
+                                value = field.convert_to_record(value, record)
+                                fetched = record.with_context(context)[field.name]
+                                if fetched != value:
+                                    info = {'cached': value, 'fetched': fetched}
+                                    invalids.append((record, field, info))
+                        else:
+                            cached = field_dump[record.id]
+                            fetched = record[field.name]
+                            value = field.convert_to_record(cached, record)
                             if fetched != value:
                                 info = {'cached': value, 'fetched': fetched}
                                 invalids.append((record, field, info))
-                    else:
-                        cached = field_dump[record.id]
-                        fetched = record[field.name]
-                        value = field.convert_to_record(cached, record)
-                        if fetched != value:
-                            info = {'cached': value, 'fetched': fetched}
-                            invalids.append((record, field, info))
-                except (AccessError, MissingError):
-                    pass
+                    except (AccessError, MissingError):
+                        pass
 
-        if invalids:
-            raise UserError('Invalid cache for fields\n' + pformat(invalids))
+            if invalids:
+                raise UserError('Invalid cache for fields\n' + pformat(invalids))
 
 
-# keep those imports here in order to handle cyclic dependencies correctly
-from odoo import SUPERUSER_ID
-from odoo.exceptions import UserError, AccessError, MissingError
-from odoo.modules.registry import Registry
-     */
-}
+    # keep those imports here in order to handle cyclic dependencies correctly
+    from odoo import SUPERUSER_ID
+    from odoo.exceptions import UserError, AccessError, MissingError
+    from odoo.modules.registry import Registry
+         */
+    }
