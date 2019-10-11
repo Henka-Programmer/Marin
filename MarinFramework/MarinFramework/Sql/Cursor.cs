@@ -32,7 +32,7 @@ namespace MarinFramework.Sql
         /// </summary>
         private bool _serialized;
         private NpgsqlTransaction _cnx;
-        private Dictionary<string, object> cache;
+        private System.Collections.Generic.Dictionary<string, object> cache;
         public bool HasRows { get => result?.HasRows ?? false; }
         private static void Check(Cursor cr)
         {
@@ -50,7 +50,7 @@ namespace MarinFramework.Sql
             _cnx = npgsqlTransaction;
             _Closed = false; //  real initialisation value
             AutoCommit(false);
-            cache = new Dictionary<string, object>();
+            cache = new System.Collections.Generic.Dictionary<string, object>();
         }
 
         private void AutoCommit(bool v)
@@ -69,7 +69,7 @@ namespace MarinFramework.Sql
 
         private Dictionary<string, object> BuildDictionary(Npgsql.NpgsqlDataReader row)
         {
-            var result = new Dictionary<string, object>();
+            var result = new System.Collections.Generic.Dictionary<string, object>();
             for (int i = 0; i < row.VisibleFieldCount; i++)
             {
                 result[row.GetName(i)] = row[i];
@@ -86,9 +86,9 @@ namespace MarinFramework.Sql
             return BuildDictionary(result);
         }
 
-        public Dictionary<string, object>[] FetchAll()
+        public System.Collections.Generic.Dictionary<string, object>[] FetchAll()
         {
-            var rows = new List<Dictionary<string, object>>();
+            var rows = new List<System.Collections.Generic.Dictionary<string, object>>();
             while (result.Read())
             {
                 rows.Add(BuildDictionary(result));
@@ -96,9 +96,9 @@ namespace MarinFramework.Sql
             return rows.ToArray();
         }
 
-        public Dictionary<string, object>[] FetchMany(int size)
+        public System.Collections.Generic.Dictionary<string, object>[] FetchMany(int size)
         {
-            var rows = new List<Dictionary<string, object>>();
+            var rows = new List<System.Collections.Generic.Dictionary<string, object>>();
             var s = size;
             while (s > 0 && result.Read())
             {

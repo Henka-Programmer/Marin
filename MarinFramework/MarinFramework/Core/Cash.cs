@@ -1,10 +1,12 @@
-﻿using System;
+﻿using MarinFramework.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace MarinFramework
 {
+
     /*
      
     # -*- coding: utf-8 -*-
@@ -718,7 +720,7 @@ NOTHING = object()
     /// </summary>
     public class Cash
     {
-        readonly Dictionary<Field, Dictionary<object, object>> _data = new Dictionary<Field, Dictionary<object, object>>();
+        readonly System.Collections.Generic.Dictionary<Field, System.Collections.Generic.Dictionary<object, object>> _data = new System.Collections.Generic.Dictionary<Field, System.Collections.Generic.Dictionary<object, object>>();
 
         /// <summary>
         /// Return whether <paramref name="record"/> has a value for <paramref name="field"/>.
@@ -731,7 +733,7 @@ NOTHING = object()
             if (field.DependsContext)
             {
                 var key = field.GetCashKey(record.Env);
-                return _data.Get(field, @default: new Dictionary<object, object>()).ContainsKey(key);
+                return _data.Get(field, @default: new System.Collections.Generic.Dictionary<object, object>()).ContainsKey(key);
             }
             return _data[field].ContainsKey(record.Id);
         }
@@ -792,7 +794,7 @@ NOTHING = object()
             if (field.DependsContext)
             {
                 var key = field.GetCashKey(record.Env);
-                var d = (Dictionary<object, object>)_data[field][record._Ids[0]];
+                var d = (System.Collections.Generic.Dictionary<object, object>)_data[field][record._Ids[0]];
                 d[key] = value;
             }
             else
@@ -827,7 +829,7 @@ NOTHING = object()
                 var fieldCashe = _data[field];
                 foreach ((int recordId, object value) in records._Ids.Zip(values, (x, y) => (x, y)))
                 {
-                    var c = (Dictionary<object, object>)fieldCashe[recordId];
+                    var c = (System.Collections.Generic.Dictionary<object, object>)fieldCashe[recordId];
                     c[key] = value;
                 }
             }
@@ -890,7 +892,7 @@ NOTHING = object()
             {
                 if (key != null)
                 {
-                    yield return ((Dictionary<object, object>)field_cache[recordId])[key];
+                    yield return ((System.Collections.Generic.Dictionary<object, object>)field_cache[recordId])[key];
                 }
                 else
                 {
@@ -938,7 +940,7 @@ NOTHING = object()
                 {
                     if (key != null)
                     {
-                        var c = (Dictionary<object, object>)field_cache;
+                        var c = (System.Collections.Generic.Dictionary<object, object>)field_cache;
                         if (c != null)
                         {
                             val = c[key];
@@ -992,7 +994,7 @@ NOTHING = object()
                 {
                     continue;
                 }
-                var values = _data.Get(field, @default: new Dictionary<object, object>());
+                var values = _data.Get(field, @default: new System.Collections.Generic.Dictionary<object, object>());
                 if (!values.ContainsKey(record.Id))
                 {
                     continue;
@@ -1000,7 +1002,7 @@ NOTHING = object()
                 if (field.DependsContext)
                 {
                     var key = field.GetCashKey(record.Env);
-                    var d = (Dictionary<object, object>)values[record.Id];
+                    var d = (System.Collections.Generic.Dictionary<object, object>)values[record.Id];
                     if (!d.ContainsKey(key))
                     {
                         continue;
@@ -1053,7 +1055,7 @@ NOTHING = object()
         /// Invalidate the cache, partially or totally depending on spec. 
         /// </summary>
         /// <param name="spec"></param>
-        public void Invalidate(Dictionary<Field, int[]> spec = null)
+        public void Invalidate(System.Collections.Generic.Dictionary<Field, int[]> spec = null)
         {
             /*
              *   def invalidate(self, spec=None):
@@ -1105,29 +1107,8 @@ NOTHING = object()
         /// <param name="env"></param>
         public void Check(Environment env)
         {
-            // flush fields to be recomputed before evaluating the cache
-            // env['res.partner'].recompute()
-
-            // make a full copy of the cache, and invalidate it
-            var dump = new Dictionary<object, Dictionary<object, object>>();
-            var keyCache = _data;
-            foreach ((Field field, Dictionary<object, object> fieldCache) in keyCache.Items())
-            {
-                dump.SetDefault(field, new Dictionary<object, object>());
-                foreach ((object recordId, object value) in fieldCache.Items())
-                {
-                    if (recordId != null)
-                    {
-                        dump[field][recordId] = value;
-                    }
-                }
-            }
-
-            Invalidate();
-        }
-        /*
-    class Cache(object):    
-        def check(self, env):
+            /*
+              def check(self, env):
             """ Check the consistency of the cache for the given environment. """
             # flush fields to be recomputed before evaluating the cache
             env['res.partner'].recompute()
@@ -1170,10 +1151,79 @@ NOTHING = object()
             if invalids:
                 raise UserError('Invalid cache for fields\n' + pformat(invalids))
 
+             */
+            // flush fields to be recomputed before evaluating the cache
+            // env['res.partner'].recompute()
 
-    # keep those imports here in order to handle cyclic dependencies correctly
-    from odoo import SUPERUSER_ID
-    from odoo.exceptions import UserError, AccessError, MissingError
-    from odoo.modules.registry import Registry
-         */
+            // make a full copy of the cache, and invalidate it
+            var dump = new System.Collections.Generic.Dictionary<Field, System.Collections.Generic.Dictionary<object, object>>();
+            var keyCache = _data;
+            foreach ((Field field, System.Collections.Generic.Dictionary<object, object> fieldCache) in keyCache.Items())
+            {
+                dump.SetDefault(field, new System.Collections.Generic.Dictionary<object, object>());
+                foreach ((object recordId, object value) in fieldCache.Items())
+                {
+                    if (recordId != null)
+                    {
+                        dump[field][recordId] = value;
+                    }
+                }
+            }
+
+            Invalidate();
+            List<(Model record, Field field, object info)> invalids = new List<(Model record, Field field, object info)>();
+
+            // re-fetch the records, and compare with their former cache
+            foreach ((Field field, System.Collections.Generic.Dictionary<object, object> fieldDump) in dump.Items())
+            {
+                var ids = fieldDump.Keys.Cast<int>().ToArray();
+                var records = env[field.ModelName].Browse(ids);
+                foreach (Model record in records)
+                {
+                    try
+                    {
+                        object info = null;
+                        var cached = fieldDump[record.Id];
+                        if (field.DependsContext)
+                        {
+                            foreach ((object contextKeys, object value) in ((Dictionary<object, object>)cached).Items())
+                            {
+                                //TODO: us the context dependency
+                                //var context = field.DependsContext.Zip();
+                                object v = field.ConvertToRecord(value, record);
+                                var fetched = record[field.Name];
+                                if (fetched != v)
+                                {
+                                    info = new { cached = v, fetched };
+                                    invalids.Add((record, field, info));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            cached = fieldDump[record.Id];
+                            var fetched = record[field.Name];
+                            var v = field.ConvertToRecord(cached, record);
+                            if (fetched != v)
+                            {
+                                info = new { cached = v, fetched };
+                                invalids.Add((record, field, info));
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // TODO:
+                    }
+                }
+            }
+
+            if (invalids.Count > 1)
+            {
+                //TODO enhance printing the error detail
+                throw new UserErrorException($"Invalid cache for fields\n{invalids.ToString()}");
+            }
+
+        }
     }
+}

@@ -24,7 +24,7 @@ namespace MarinFramework.Sql
 
     internal static class SqlHeper
     {
-        static Dictionary<CONFDELTYPES, string> _CONFDELTYPES = new Dictionary<CONFDELTYPES, string>
+        static System.Collections.Generic.Dictionary<CONFDELTYPES, string> _CONFDELTYPES = new System.Collections.Generic.Dictionary<CONFDELTYPES, string>
         {
             [CONFDELTYPES.RESTRICT] = "r",
             [CONFDELTYPES.NO_ACTION] = "a",
@@ -32,7 +32,7 @@ namespace MarinFramework.Sql
             [CONFDELTYPES.SET_NULL] = "n",
             [CONFDELTYPES.SET_DEFAULT] = "d"
         };
-        static Dictionary<string, string> _TABLE_KIND = new Dictionary<string, string>
+        static System.Collections.Generic.Dictionary<string, string> _TABLE_KIND = new System.Collections.Generic.Dictionary<string, string>
         {
             ["BASE TABLE"] = "r",
             ["VIEW"] = "v",

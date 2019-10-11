@@ -8,7 +8,7 @@ namespace MarinFramework
 {
     public class Model : INotifyPropertyChanged, IEnumerable
     {
-        internal Dictionary<string, Field> _Fields;
+        internal System.Collections.Generic.Dictionary<string, Field> _Fields;
 
         internal List<int> _Ids { get; private set; } = new List<int>();
         public MarinFramework.Environment Env { get; set; }
@@ -24,8 +24,8 @@ namespace MarinFramework
             Field.Register("MyProperty", typeof(int), typeof(Model));
 
 
-        Dictionary<string, object> values;
-        public dynamic this[string pname]
+        System.Collections.Generic.Dictionary<string, object> values;
+        public object this[string pname]
         {
             get => values[pname];
             set => values[pname] = value;
@@ -52,7 +52,7 @@ namespace MarinFramework
         {
         }
 
-        protected Model Create(Dictionary<string, object> keyValues)
+        protected Model Create(System.Collections.Generic.Dictionary<string, object> keyValues)
         {
             return Create(keyValues);
         }
@@ -67,7 +67,7 @@ namespace MarinFramework
 
         }
 
-        public virtual void Write(Dictionary<string, object> keyValues)
+        public virtual void Write(System.Collections.Generic.Dictionary<string, object> keyValues)
         {
 
         }

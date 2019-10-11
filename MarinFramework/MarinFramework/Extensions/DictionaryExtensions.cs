@@ -6,7 +6,7 @@ namespace MarinFramework
 {
     internal static class DictionaryExtensions
     {
-        internal static Dictionary<TKey, TValue> SetDefault<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, TValue value)
+        internal static Dictionary<TKey, TValue> SetDefault<TKey, TValue>(this System.Collections.Generic.Dictionary<TKey, TValue> dict, TKey key, TValue value)
         {
             if (!dict.TryGetValue(key, out TValue ov))
             {
@@ -15,14 +15,14 @@ namespace MarinFramework
             return dict;
         }
 
-        internal static IEnumerable<(TKey key, TValue value)> Items<TKey, TValue>(this Dictionary<TKey, TValue> dict)
+        internal static IEnumerable<(TKey key, TValue value)> Items<TKey, TValue>(this System.Collections.Generic.Dictionary<TKey, TValue> dict)
         {
             foreach (var item in dict)
             {
                 yield return (item.Key, item.Value);
             }
         }
-        internal static TValue Get<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, TValue @default = default(TValue))
+        internal static TValue Get<TKey, TValue>(this System.Collections.Generic.Dictionary<TKey, TValue> dict, TKey key, TValue @default = default(TValue))
         {
             if (dict.TryGetValue(key, out TValue value))
             {
@@ -31,7 +31,7 @@ namespace MarinFramework
             return @default;
         }
 
-        internal static void Update<TKey, TValue>(this Dictionary<TKey, TValue> dic, Dictionary<TKey, TValue> update)
+        internal static void Update<TKey, TValue>(this System.Collections.Generic.Dictionary<TKey, TValue> dic, System.Collections.Generic.Dictionary<TKey, TValue> update)
         {
             foreach (var item in update)
             {

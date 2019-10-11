@@ -26,7 +26,7 @@ namespace MarinFramework
             return model;
         }
 
-        public static TModel Create<TModel>(this TModel model, Dictionary<string, object> keyValues) where TModel : Model
+        public static TModel Create<TModel>(this TModel model, System.Collections.Generic.Dictionary<string, object> keyValues) where TModel : Model
         {
             return model;
         }

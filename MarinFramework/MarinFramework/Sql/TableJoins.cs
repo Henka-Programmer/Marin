@@ -3,7 +3,7 @@ using System.Text;
 
 namespace MarinFramework.Sql
 {
-    public class TableJoins : Dictionary<string, List<(string table_b, string table_col, string table_b_col, string join)>>
+    public class TableJoins : System.Collections.Generic.Dictionary<string, List<(string table_b, string table_col, string table_b_col, string join)>>
     {
         public new List<(string table_b, string table_col, string table_b_col, string join)> this[string key]
         {
