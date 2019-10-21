@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MarinFramework.Sql;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,6 +9,10 @@ namespace MarinFramework
 {
     public class Model : INotifyPropertyChanged, IEnumerable
     {
+        internal string _Table;
+        internal Cursor _cr { get => cr; }
+        protected Cursor cr;
+
         internal System.Collections.Generic.Dictionary<string, Field> _Fields;
 
         internal List<int> _Ids { get; private set; } = new List<int>();

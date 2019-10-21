@@ -1,323 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using System.Text;
 
 namespace MarinFramework
 {
-    public class FieldInfo : Dictionary<string, object>
-    {
-        internal FieldInfo()
-        {
-
-        }
-        private T Get<T>(T @default, [CallerMemberName] string key = "")
-        {
-            if (ContainsKey(key))
-            {
-                return (T)this[key];
-            }
-            return (T)(this[key] = @default);
-        }
-
-        private T Get<T>([CallerMemberName] string key = "")
-        {
-            return Get(default(T), key);
-        }
-
-        private void Set<T>(T value, [CallerMemberName] string key = "")
-        {
-            this[key] = value;
-        }
-
-        /// <summary>
-        /// the field's module name
-        /// </summary>
-        internal string Module { get => Get<string>(); set => Set(value); }
-        /// <summary>
-        /// modules that define this field
-        /// </summary>
-        internal List<string> Modules { get => Get(new List<string>()); set => Set(value); }
-
-        /// <summary>
-        /// the field's setup state: None, 'base' or 'full'
-        /// </summary>
-        internal string SetupDone { get => Get<string>(); set => Set(value); }
-
-        /// <summary>
-        /// absolute ordering of the field
-        /// </summary>
-        internal int Sequence { get => Get<int>(); set => Set(value); }
-
-        /// <summary>
-        /// Whether the field is automatically created ("magic" field
-        /// </summary>
-        internal bool Automatic { get => Get<bool>(); set => Set(value); }
-
-        /// <summary>
-        /// Whether the field is inherited
-        /// </summary>
-        internal bool Inherited { get => Get<bool>(); set => Set(value); }
-
-        /// <summary>
-        /// the corresponding inherited field
-        /// </summary>
-        public Field InheritedField { get => Get<Field>(); set => Set(value); }
-        public string Name { get => Get<string>(); set => Set(value); }
-
-        /// <summary>
-        /// name of the model of this field
-        /// </summary>
-        public string ModelName { get => Get<string>(); set => Set(value); }
-
-        /// <summary>
-        /// Name of the model of values (if relational)
-        /// </summary>
-        public string CoModelName { get => Get<string>(); set => Set(value); }
-
-        /// <summary>
-        /// Whether the field is stored in database
-        /// </summary>
-        public bool Store { get => Get<bool>(true); set => Set(value); }
-
-        /// <summary>
-        ///  Whether the field is indexed in database
-        /// </summary>
-        public bool Index { get => Get<bool>(); set => Set(value); }
-
-        /// <summary>
-        /// whether the field is a custom field
-        /// </summary>
-        public bool Manual { get => Get<bool>(); set => Set(value); }
-
-        /// <summary>
-        ///  whether the field is copied over by Model.copy()
-        /// </summary>
-        public bool Copy { get => Get<bool>(true); set => Set(value); }
-
-        /// <summary>
-        /// collection of field dependencies
-        /// </summary>
-        public List<string> Depends { get => Get(new List<string>()); set => Set(value); }
-
-        /// <summary>
-        /// Whether self depends on itself
-        /// </summary>
-        public bool Recursive { get => Get<bool>(false); set => Set(value); }
-
-        /// <summary>
-        /// compute(recs) computes field on recs
-        /// </summary>
-        public Action<Model> Compute { get => Get<Action<Model>>(null); set => Set(value); }
-        /// <summary>
-        /// Whether field should be recomputed as admin
-        /// </summary>
-        public bool ComputeSudo { get => Get<bool>(false); set => Set(value); }
-        /// <summary>
-        /// inverse(recs) inverses field on recs
-        /// </summary>
-        public Action<Model> Inverse { get => Get<Action<Model>>(null); set => Set(value); }
-
-        /// <summary>
-        /// search(recs, operator, value) searches on self
-        /// </summary>
-        public Action<Model, string, object> Search { get => Get<Action<Model, string, object>>(null); set => Set(value); }
-
-        /// <summary>
-        /// sequence of field names, for related fields
-        /// </summary>
-        public string Related { get => Get<string>(); set => Set(value); }
-
-        /// <summary>
-        /// Whether related fields should be read as admin
-        /// </summary>
-        public bool RelatedSudo { get => Get<bool>(true); set => Set(value); }
-
-        /// <summary>
-        /// Whether this is company-dependent (property field)
-        /// </summary>
-        public bool CompanyDependent { get => Get<bool>(false); set => Set(value); }
-
-        /// <summary>
-        /// default(recs) returns the default value
-        /// </summary>
-        public object Default { get => Get<object>(null); set => Set(value); }
-
-        /// <summary>
-        ///  field label
-        /// </summary>
-        public string String { get => Get<string>(null); set => Set(value); }
-
-        /// <summary>
-        /// field tooltip
-        /// </summary>
-        public string Help { get => Get<string>(null); set => Set(value); }
-
-        /// <summary>
-        ///  whether the field is readonly
-        /// </summary>
-        public bool ReadOnly { get => Get<bool>(false); set => Set(value); }
-
-        /// <summary>
-        /// whether the field is required
-        /// </summary>
-        public bool Required { get => Get<bool>(false); set => Set(value); }
-
-        /// <summary>
-        /// set readonly and required depending on state
-        /// </summary>
-        public object States { get => Get<object>(null); set => Set(value); }
-
-        /// <summary>
-        /// Csv list of group xml ids
-        /// </summary>
-        public string Groups { get => Get<string>(string.Empty); set => Set(value); }
-
-        /// <summary>
-        /// Corresponding related field
-        /// </summary>
-        public Field RelatedField { get => Get<Field>(null); set => Set(value); }
-
-        /// <summary>
-        /// whether the field is prefetched
-        /// </summary>
-        public bool Prefetch { get => Get<bool>(true); set => Set(value); }
-
-        /// <summary>
-        /// whether the field's value depends on context
-        /// </summary>
-        public bool ContextDependent { get => Get<bool>(true); set => Set(value); }
-        public Collections.Dictionary<string, object> Args { get => Get(new Collections.Dictionary<string, object>()); set => Set(value); }
-
-        public FieldInfo(Dictionary<string, object> args)
-        {
-            Args.Update(args);
-        }
-
-        /// <summary>
-        /// Base setup: things that do not depend on other models/fields. 
-        /// </summary>
-        /// <param name="model"></param>
-        /// <param name="name"></param>
-        public void SetupBase(Model model, string name)
-        {
-            if (!string.IsNullOrEmpty(SetupDone) && string.IsNullOrEmpty(Related))
-            {
-                //optimization for regular fields: keep the base setup
-                SetupDone = "BASE";
-            }
-            else
-            {
-                // do the base setup from scratch
-                SetupInfo(model, name);
-                if (string.IsNullOrEmpty(Related))
-                {
-                    SetupRegularBase(model);
-                }
-                SetupDone = "BASE";
-            }
-        }
-
-        private void SetupRegularBase(Model model)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SetupInfo(Model model, string name)
-        {
-            throw new NotImplementedException();
-        }
-    }
 
     /*   
-    ############################################################################
-    #
-    # Base field setup: things that do not depend on other models/fields
-    #
-     
-    #
-    # Setup field parameter attributes
-    #
-
-    def _can_setup_from(self, field):
-        """ Return whether ``self`` can retrieve parameters from ``field``. """
-        return isinstance(field, type(self))
-
-    def _get_attrs(self, model, name):
-        """ Return the field parameter attributes as a dictionary. """
-        # determine all inherited field attributes
-        modules = set()
-        attrs = {}
-        if not (self.args.get('automatic') or self.args.get('manual')):
-            # magic and custom fields do not inherit from parent classes
-            for field in reversed(resolve_mro(model, name, self._can_setup_from)):
-                attrs.update(field.args)
-                if '_module' in field.args:
-                    modules.add(field.args['_module'])
-        attrs.update(self.args)         # necessary in case self is not in class
-
-        attrs['args'] = self.args
-        attrs['model_name'] = model._name
-        attrs['name'] = name
-        attrs['_modules'] = modules
-
-        # initialize ``self`` with ``attrs``
-        if attrs.get('compute'):
-            # by default, computed fields are not stored, not copied and readonly
-            attrs['store'] = attrs.get('store', False)
-            attrs['copy'] = attrs.get('copy', False)
-            attrs['readonly'] = attrs.get('readonly', not attrs.get('inverse'))
-            attrs['context_dependent'] = attrs.get('context_dependent', True)
-        if attrs.get('related'):
-            # by default, related fields are not stored and not copied
-            attrs['store'] = attrs.get('store', False)
-            attrs['copy'] = attrs.get('copy', False)
-            attrs['readonly'] = attrs.get('readonly', True)
-        if attrs.get('company_dependent'):
-            # by default, company-dependent fields are not stored and not copied
-            attrs['store'] = False
-            attrs['copy'] = attrs.get('copy', False)
-            attrs['default'] = self._default_company_dependent
-            attrs['compute'] = self._compute_company_dependent
-            if not attrs.get('readonly'):
-                attrs['inverse'] = self._inverse_company_dependent
-            attrs['search'] = self._search_company_dependent
-            attrs['context_dependent'] = attrs.get('context_dependent', True)
-        if attrs.get('translate'):
-            # by default, translatable fields are context-dependent
-            attrs['context_dependent'] = attrs.get('context_dependent', True)
-        if 'depends' in attrs:
-            attrs['depends'] = tuple(attrs['depends'])
-
-        return attrs
-
-    def _setup_attrs(self, model, name):
-        """ Initialize the field parameter attributes. """
-        attrs = self._get_attrs(model, name)
-        self.set_all_attrs(attrs)
-
-        # check for renamed attributes (conversion errors)
-        for key1, key2 in RENAMED_ATTRS:
-            if key1 in attrs:
-                _logger.warning("Field %s: parameter %r is no longer supported; use %r instead.",
-                                self, key1, key2)
-
-        # prefetch only stored, column, non-manual and non-deprecated fields
-        if not (self.store and self.column_type) or self.manual or self.deprecated:
-            self.prefetch = False
-
-        if not self.string and not self.related:
-            # related fields get their string from their parent field
-            self.string = (
-                name[:-4] if name.endswith('_ids') else
-                name[:-3] if name.endswith('_id') else name
-            ).replace('_', ' ').title()
-
-        # self.default must be a callable
-        if self.default is not None:
-            value = self.default
-            self.default = value if callable(value) else lambda model: value
-
     ############################################################################
     #
     # Full field setup: everything else, except recomputation triggers
@@ -1010,6 +699,218 @@ namespace MarinFramework
     /// </summary>
     public abstract class Field
     {
+
+        #region statics
+        /// <summary>
+        /// Return whether self can retrieve parameters from field.
+        /// </summary>  
+        protected static bool CanSetupFrom(Field self, Field field)
+        {
+            return self.GetType() == field.GetType();
+        }
+
+        protected static FieldInfo GetFieldInfo(Field self, Type model, string name)
+        {
+            var modules = new List<string>();
+            var info = new FieldInfo();
+            ///magic and custom fields do not inherit from parent classes
+            if (!(self._Slots.Automatic || self._Slots.Manual))
+            {
+                //TODO: 
+                /*
+              for field in reversed(resolve_mro(model, name, self._can_setup_from)):
+               attrs.update(field.args)
+               if '_module' in field.args:
+                   modules.add(field.args['_module'])    
+             */
+            }
+
+            info[nameof(Field.Translate)] = self.Translate;
+            info[nameof(Field.ColumnType)] = self.ColumnType;
+            info[nameof(Field.ColumnFormat)] = self.ColumnFormat;
+            info[nameof(Field.ColumnCastFrom)] = self.ColumnCastFrom;
+            info[nameof(Field.Relational)] = self.Relational;
+            info[nameof(Field.Type)] = self.Type;
+
+            info.Update(self._Slots);
+            info.Args = self._Slots.Args;
+            info.ModelName = model.Name; //TODO:  get the model name from the attributes
+            info.Name = model.Name;
+            info.Modules = modules;
+            if (info.Compute != null)
+            {
+                // by default, computed fields are not stored, not copied and readonly
+                info.Store = (bool)info.Get("Store", @default: false);
+                info.Copy = (bool)info.Get("Copy", @default: false);
+                info.ReadOnly = (bool)info.Get("ReadOnly", @default: info.Inverse == null);
+                info.ContextDependent = (bool)info.Get("ContextDependent", @default: true);
+            }
+
+            if (!string.IsNullOrEmpty(info.Related))
+            {
+                // by default, related fields are not stored and not copied  
+                info.Store = (bool)info.Get("Store", @default: false);
+                info.Copy = (bool)info.Get("Copy", @default: false);
+                info.ReadOnly = (bool)info.Get("ReadOnly", @default: true);
+            }
+
+            if (info.CompanyDependent)
+            {
+                // by default, company-dependent fields are not stored and not copied
+                info.Store = false;
+                info.Copy = (bool)info.Get("Copy", @default: false);
+                //TODO:
+                /*
+             attrs['default'] = self._default_company_dependent
+           attrs['compute'] = self._compute_company_dependent
+           if not attrs.get('readonly'):
+               attrs['inverse'] = self._inverse_company_dependent
+           attrs['search'] = self._search_company_dependent
+           attrs['context_dependent'] = attrs.get('context_dependent', True)    
+             */
+            }
+
+            if ((bool)info.Get(nameof(Field.Translate), false))
+            {
+                //  by default, translatable fields are context-dependent
+                info.ContextDependent = (bool)info.Get("ContextDependent", true);
+            }
+            return info;
+        }
+        #endregion statics
+
+        /// <summary>
+        /// Update the database schema to implement this field.
+        /// columns: a dict mapping column names to their configuration in database
+        /// </summary>
+        protected virtual bool UpdateDatabase(Model model, Dictionary<string, string> columns)
+        {
+            if (ColumnType == null)
+            {
+                return false;
+            }
+
+            var column = columns.Get(Name, @default: null);
+
+            if (column == null && string.IsNullOrEmpty(_Slots.OldName))
+            {
+                //  column not found; check whether it exists under its old name
+                column = columns.Get(_Slots.OldName, @default: null);
+                if (column != null)
+                {
+                    Sql.SqlHeper.RenameColumn(model._cr, model._Table, _Slots.OldName, Name);
+                }
+            }
+
+            //  create/update the column, not null constraint, indexes
+            UpdateDbColumn(model, column);
+            UpdateDbNotNull(model, column);
+            UpdateDbIndex(model, column);
+            return column == null;
+        }
+
+        /// <summary>
+        /// Create/update the column corresponding to this field.
+        /// 
+        /// </summary>
+        /// <param name="model">an instance of the field's model</param>
+        /// <param name="column">The column's configuration (dict) if it exists, or null</param>
+        private void UpdateDbColumn(Model model, Dictionary<string, string> column)
+        {
+            if (column == null)
+            {
+                // the column does not exist, create it
+                Sql.SqlHeper.CreateColumn(model._cr, model._Table, Name, ColumnType?.ToString(), _Slots.String);
+                return;
+            }
+
+            // column['udt_name'] == self.column_type[0]:
+            if (column["udt_name"] == ColumnType[0])
+            {
+                return;
+            }
+
+            if (ColumnCastFrom?.Contains(column["udt_name"].ToString()) ?? false)
+            {
+                Sql.SqlHeper.ConvertColumn(model._cr, model._Table, Name, ColumnType[1]);
+            }
+            else
+            {
+                var newName = $"{Name}_moved{{0}}";
+                var i = 0;
+                while (Sql.SqlHeper.ColumnExists(model._cr, model._Table, string.Format(newName, i)))
+                {
+                    i++;
+                }
+                if (column["is_nullable"] == "NO")
+                {
+                    Sql.SqlHeper.DropNotNull(model._cr, model._Table, Name);
+                }
+                Sql.SqlHeper.RenameColumn(model._cr, model._Table, Name, newName);
+                Sql.SqlHeper.CreateColumn(model._cr, model._Table, Name, ColumnType[1], _Slots.String);
+
+            }
+
+
+        }
+
+        private void UpdateDbNotNull(Model model, object column)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void UpdateDbIndex(Model model, object column)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Base setup: things that do not depend on other models/fields. 
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="name"></param>
+        public static void SetupBase(Field self, Type model, string name)
+        {
+            if (!string.IsNullOrEmpty(self._Slots.SetupDone) && string.IsNullOrEmpty(self._Slots.Related))
+            {
+                //optimization for regular fields: keep the base setup
+                self._Slots.SetupDone = "BASE";
+            }
+            else
+            {
+                // do the base setup from scratch
+                SetupInfo(self, model, name);
+                if (string.IsNullOrEmpty(self._Slots.Related))
+                {
+                    SetupRegularBase(self, model);
+                }
+                self._Slots.SetupDone = "BASE";
+            }
+        }
+
+        private static void SetupRegularBase(Field self, Type model)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void SetupInfo(Field self, Type model, string name)
+        {
+            var info = GetFieldInfo(self, model, name);
+            self._Slots.Update(info);
+
+            // prefetch only stored, column, non-manual and non-deprecated fields
+            if (!(self._Slots.Store && self.ColumnType != null) || self._Slots.Manual)
+            {
+                self._Slots.Prefetch = false;
+            }
+
+            if (string.IsNullOrEmpty(self._Slots.String) && !string.IsNullOrEmpty(self._Slots.Related))
+            {
+                // related fields get their string from their parent field
+                self._Slots.String = self._Slots.RelatedField._Slots.String;
+            }
+        }
+
         private readonly FieldInfo _Slots = new FieldInfo();
         /// <summary>
         /// Type of the field
@@ -1026,9 +927,9 @@ namespace MarinFramework
         /// </summary>
         public bool Translate { get; protected set; } = false;
 
-        public object ColumnType { get; protected set; }
+        public string[] ColumnType { get; protected set; }
         public string ColumnFormat { get; protected set; } = "@{0}";
-        public Type[] ColumnCastFrom { get; set; }
+        public string[] ColumnCastFrom { get; set; }
 
         private Type _ModelType;
         public string ModelName { get => _ModelType.Name; }
