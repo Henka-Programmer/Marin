@@ -400,7 +400,7 @@ WHERE t.relname =@tableName AND conname = @constraintName;";
         internal static string EscapePSql(string toEscape)
         {
             // to_escape.replace('\\', r'\\').replace('%', '\%').replace('_', '\_')
-            return toEscape.Replace("\\", @"\\").Replace("%", @"\%").Replace("_", "@"\_);
+            return toEscape.Replace("\\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
         }
 
         /// <summary>

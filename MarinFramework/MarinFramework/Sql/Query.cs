@@ -19,6 +19,7 @@ namespace MarinFramework.Sql
         private List<string> whereClause = new List<string>();
         private List<object> whereClauseParams = new List<object>();
         private JoinCondition extras = new JoinCondition();
+
         /// <summary>
         /// 
         /// </summary>

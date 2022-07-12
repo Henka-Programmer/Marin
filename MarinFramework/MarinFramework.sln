@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29001.49
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarinFramework", "MarinFramework\MarinFramework.csproj", "{90719645-634E-4197-9FD7-E12B2A7236F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarinFramework", "MarinFramework\MarinFramework.csproj", "{90719645-634E-4197-9FD7-E12B2A7236F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFilter", "DFilter\DFilter.csproj", "{F6D374D5-BC8D-4A81-B4FB-F0A23DD694A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFilterTests", "DFilterTests\DFilterTests.csproj", "{DEA43BE4-4454-4A4E-A8FC-FB38033B441A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{90719645-634E-4197-9FD7-E12B2A7236F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90719645-634E-4197-9FD7-E12B2A7236F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90719645-634E-4197-9FD7-E12B2A7236F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6D374D5-BC8D-4A81-B4FB-F0A23DD694A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6D374D5-BC8D-4A81-B4FB-F0A23DD694A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6D374D5-BC8D-4A81-B4FB-F0A23DD694A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6D374D5-BC8D-4A81-B4FB-F0A23DD694A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEA43BE4-4454-4A4E-A8FC-FB38033B441A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEA43BE4-4454-4A4E-A8FC-FB38033B441A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEA43BE4-4454-4A4E-A8FC-FB38033B441A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEA43BE4-4454-4A4E-A8FC-FB38033B441A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
