@@ -75,7 +75,7 @@ namespace MarinFramework.Sql
 
         protected Dictionary<string, string> GetAliasMapping()
         {
-            var mapping = new System.Collections.Generic.Dictionary<string, string>();
+            var mapping = new Dictionary<string, string>();
             for (int i = 0; i < tables.Count; i++)
             {
                 string t = tables[i];

@@ -45,8 +45,14 @@
   <ItemGroup>
     <Compile Include="DictionaryExtensions.cs" />
     <Compile Include="Expression.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="JoinCondition.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Security\Crc32.cs" />
+    <Compile Include="Security\SafeProxy.cs" />
+    <Compile Include="Security\SafeProxyC.cs" />
+    <Compile Include="TableJoins.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
