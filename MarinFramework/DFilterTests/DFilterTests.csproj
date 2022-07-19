@@ -49,8 +49,10 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExpressionTests.cs" />
     <Compile Include="SearchDomainTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryTestes.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

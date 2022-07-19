@@ -52,10 +52,39 @@ namespace DFilterTests
             var _false = DomainOperators.FALSE_DOMAIN;
             var _true = DomainOperators.TRUE_DOMAIN;
 
-            var normal = new SearchDomain(("foo", "=", "bar"));
             // OR with single FALSE_LEAF
             var expr = SearchDomain.OR(_false);
             Assert.IsTrue(expr.Equals(_false));
+
+            // OR with multiple FALSE_LEAF
+            expr = SearchDomain.OR(_false, _false);
+            Assert.IsTrue(expr.Equals(_false));
+
+            // OR with FALSE_LEAF and a normal leaf
+            var normal = new SearchDomain(("foo", "=", "bar"));
+            expr = SearchDomain.OR(_false, normal);
+            Assert.IsTrue(expr.Equals(normal));
+
+            // OR with AND of single TRUE_LEAF and normal leaf
+            expr = SearchDomain.OR(SearchDomain.AND(_true), normal);
+            Assert.IsTrue(expr.Equals(_true));
+
+            // AND with single TRUE_LEAF
+            expr = SearchDomain.AND(_true);
+            Assert.IsTrue(expr.Equals(_true));
+
+            //AND with multiple TRUE_LEAF
+            expr = SearchDomain.AND(_true, _true);
+            Assert.IsTrue(expr.Equals(_true));
+
+            // AND with TRUE_LEAF and normal leaves
+            expr = SearchDomain.AND(_true, normal);
+            Assert.IsTrue(expr.Equals(normal));
+
+            // AND with OR with single FALSE_LEAF and normal leaf
+            expr = SearchDomain.AND(SearchDomain.OR(_false), normal);
+            Assert.IsTrue(expr.Equals(_false));
         }
+
     }
 }
