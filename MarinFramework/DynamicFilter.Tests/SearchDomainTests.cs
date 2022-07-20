@@ -1,8 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using DFilter;
+using DynamicFilter;
 
-namespace DFilterTests
+namespace DynamicFilterTests
 {
     [TestClass]
     public class SearchDomainTests
@@ -38,7 +38,7 @@ namespace DFilterTests
             var d1 = new SearchDomain(("foo", "=", 1), ("bar", "=", 1));
             var d2 = new SearchDomain("&", ("foo", "=", 2), ("bar", "=", 2));
 
-            var expected = new SearchDomain("|", "&", ("foo", "=", 1), ("bar", "=", 1), "&", ("foo", "=", 2), ("bar", "=", 2));
+            var expected = new SearchDomain("|", "&", ("foo", "=", 1), ("bar", "=", 1), "|", ("foo", "=", 2), ("bar", "=", 2));
 
             Assert.IsTrue(expected.Equals(SearchDomain.OR(d1, d2)));
         }

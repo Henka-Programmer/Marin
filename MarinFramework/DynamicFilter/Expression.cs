@@ -3,17 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DFilter
+namespace DynamicFilter
 {
     public partial class Expression
     {
         private readonly SearchDomain _expression;
-        private readonly string _rootAlias;
+        private readonly string? _rootAlias;
         private readonly Model _rootModel;
 
         public Query Query { get; private set; }
 
-        public Expression(SearchDomain domain, Model model, string alias = null, Query query = null)
+        public Expression(SearchDomain domain, Model model, string? alias = null, Query? query = null)
         {
             Query = query ?? new Query(model.Table, model.TableQuery);
             _expression = SearchDomain.DistributeNot(domain.Normalize());
@@ -112,28 +112,29 @@ namespace DFilter
                 {
                     if (right is string str && str.Length == 10)
                     {
-                        if (@operator == ">" || @operator == "<=")
-                        {
-                            right = right.ToString() + " 23:59:59";
-                        }
-                        else
-                        {
-                            right = right.ToString() + " 00:00:00";
-                        }
-
+                        //if (@operator == ">" || @operator == "<=")
+                        //{
+                        //    right = right.ToString() + " 23:59:59";
+                        //}
+                        //else
+                        //{
+                        //    right = right.ToString() + " 00:00:00";
+                        //}
+                        right = DateOnly.Parse(str);
                         stack.Push(((left, @operator, right), model, alias));
                     } else if (right is DateTime dt && dt.TimeOfDay == TimeSpan.Zero)
                     {
-                        if (@operator == ">" || @operator == "<=")
-                        {
-                            right = dt.Add(new TimeSpan(0, 23, 59, 59, 99999));
-                        }
+                        //if (@operator == ">" || @operator == "<=")
+                        //{
+                        //    right = dt.Add(new TimeSpan(0, 23, 59, 59, 99999));
+                        //}
+                        right = DateOnly.FromDateTime(dt);
 
                         stack.Push(((left, @operator, right), model, alias));
                     }
                     else
                     {
-                        var leafToSql = this.LeafToSql(leaf, model, alias);
+                        var leafToSql = LeafToSql(leaf, model, alias);
                         resultStack.Push(leafToSql);
                     }
                 }
@@ -156,24 +157,32 @@ namespace DFilter
 
         private (string, QueryParameter[]) LeafToSql(object leaf, Model model, string alias)
         {
-            SearchDomain.IsLeaf(leaf, out Term term);
+            if (!SearchDomain.IsLeaf(leaf, out Term term) || term == null)
+            {
+                throw new ArgumentException("Invalid leaf!");
+            }
 
             var checkNull = false;
             var (left, @operator, right) = term;
 
-            var tableAlias = $"{alias}";
+            if (left == null)
+            {
+                throw new InvalidOperationException($"Invalid term with invalid left: ({left},{@operator},{right})");
+            }
 
+            var tableAlias = $"{alias}";
             var query = "";
             QueryParameter[] @params;
 
             if (term == DomainOperators.TRUE_LEAF)
             {
                 query = "TRUE";
-                @params = new QueryParameter[] {};
-            }else if (term == DomainOperators.FALSE_LEAF)
+                @params = Array.Empty<QueryParameter>();
+            }
+            else if (term == DomainOperators.FALSE_LEAF)
             {
                 query = "FLASE";
-                @params = new QueryParameter[] {};
+                @params = Array.Empty<QueryParameter>();
             }else if (@operator == "in" || @operator == "not in")
             {
                 if (right is Query rq)
@@ -183,7 +192,11 @@ namespace DFilter
                     @params = subParams;
                 }else if (right is IList list)
                 {
-                    var column = model.Columns.Get(left.ToString());
+                    var column = model.Columns.Get(left.ToString()!);
+                    if (column == null)
+                    {
+                        throw new InvalidOperationException($"Column definition missed? No such column in {model.Table} model.");
+                    }
                     if (column.Type == typeof(bool))
                     {
                         //TODO: not sure to use this case
@@ -191,7 +204,7 @@ namespace DFilter
                     }
                     else
                     {
-                        @params = QueryParameter.GetQueryParameters(left.ToString(), list.Cast<object>().Where(x => x != null).ToArray()).ToArray();
+                        @params = QueryParameter.GetQueryParameters(left.ToString()!, column.Type, list.Cast<object>().Where(x => x != null).ToArray()).ToArray();
                         checkNull = @params.Length < list.Count;
                     }
 
@@ -219,24 +232,38 @@ namespace DFilter
                     // Must not happened
                     throw new InvalidOperationException("Invalid domain term");
                 }
-            }else if (model.Columns.TryGetValue(left.ToString(), out Column col) && col.Type == typeof(bool) && ((@operator == "=" && right is bool b && !b) || (@operator == "!=" && right is bool br && br)))
+            }else if (model.Columns.TryGetValue(left.ToString()!, out Column? col) && col.Type == typeof(bool) && ((@operator == "=" && right is bool b && !b) || (@operator == "!=" && right is bool br && br)))
             {
                 query = $"([{tableAlias}].[{left}] IS NULL OR [{tableAlias}].[{left}] = FALSE )";
-                @params = new QueryParameter[] { };
+                @params = Array.Empty<QueryParameter>();
             }else if ((right == null || right is bool rightBool && !rightBool) && @operator == "=")
             {
                 query = $"[{tableAlias}].[{left}] ";
-                @params = new QueryParameter[] { };
+                @params = Array.Empty<QueryParameter>();
             }
             else if (col != null && col.Type == typeof(bool) && ((@operator == "!=" && right is bool b2 && !b2) || (@operator == "!=" && right is bool b3 && b3)))
             {
                 query = $"([{tableAlias}].[{left}] IS NOT NULL OR [{tableAlias}].[{left}] != FALSE )";
-                @params = new QueryParameter[] { };
+                @params = Array.Empty<QueryParameter>();
             }
             else if ((right == null || right is bool rightBool2 && !rightBool2) && @operator != "!=")
             {
                 query = $"[{tableAlias}].[{left}] IS NOT NULL";
-                @params = new QueryParameter[] { };
+                @params = Array.Empty<QueryParameter>();
+            }else if (col != null && col.Type == typeof(DateTime))
+            {
+                var parameter = new QueryParameter(left.ToString()!, col.Type, right);
+                query = $"[{tableAlias}].[{left}] {@operator} @{parameter.Name}";
+                if (right is DateOnly dateOnly)
+                {
+                    query = $"CONVERT(DATE, [{tableAlias}].[{left}]) {@operator} @{parameter.Name}";
+
+                    // convert back the value to Datetime, as the DateOnly not supported in Mapping to SQL datatypes.
+                    parameter = new QueryParameter(left.ToString()!, col.Type, dateOnly.ToDateTime(TimeOnly.MinValue));
+                }
+
+                @params = new QueryParameter[] { parameter };
+
             }else
             {
                 var needWildcard = @operator == "like" || @operator == "ilike" || @operator == "not like" || @operator == "not ilike";
@@ -257,12 +284,11 @@ namespace DFilter
 
                 if (needWildcard)
                 {
-                    @params = new QueryParameter[] { new QueryParameter($"p{left}", $"%{right}%") };
+                    @params = new QueryParameter[] { new QueryParameter(rightParameterName, col.Type, $"%{right}%") };
                 }
                 else
                 {
-                    @params = new QueryParameter[] { new QueryParameter($"p{left}", right?.ToString()) };
-
+                    @params = new QueryParameter[] { new QueryParameter(rightParameterName, col.Type, right?.ToString()) };
                 }
             }
 

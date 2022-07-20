@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 
-namespace DFilter
+namespace DynamicFilter
 {
     public class Query
     {
@@ -18,7 +18,7 @@ namespace DFilter
 
         public int? Limit { get; set; }
         public int? Offset { get; set; }
-        public string Order { get; set; }
+        public string? Order { get; set; }
 
         /// <summary>
         /// 
@@ -28,7 +28,7 @@ namespace DFilter
         /// <param name="whereClauseParams"></param>
         /// <param name="joins"></param>
         /// <param name="extras"></param>
-        public Query(string alias, string table = null)
+        public Query(string alias, string? table = null)
         {
             _tables.Add(alias, table ?? alias);
         }

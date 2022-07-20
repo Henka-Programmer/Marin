@@ -47,6 +47,7 @@
     <Compile Include="DictionaryExtensions.cs" />
     <Compile Include="DomainOperators.cs" />
     <Compile Include="Expression.cs" />
+    <Compile Include="Expression.TermStack.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Sql\JoinCondition.cs" />
     <Compile Include="Model.cs" />
