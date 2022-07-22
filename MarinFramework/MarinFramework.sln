@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicFilter", "DynamicFil
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicFilter.Tests", "DynamicFilter.Tests\DynamicFilter.Tests.csproj", "{DBDA3827-A859-43CA-9E18-4E8CEC5ED2AE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicFilter.Integration.Tests", "DynamicFilter.Integration.Tests\DynamicFilter.Integration.Tests.csproj", "{6473FE63-2CD1-44DF-88EA-8B9A6311174C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{DBDA3827-A859-43CA-9E18-4E8CEC5ED2AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBDA3827-A859-43CA-9E18-4E8CEC5ED2AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBDA3827-A859-43CA-9E18-4E8CEC5ED2AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6473FE63-2CD1-44DF-88EA-8B9A6311174C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6473FE63-2CD1-44DF-88EA-8B9A6311174C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6473FE63-2CD1-44DF-88EA-8B9A6311174C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6473FE63-2CD1-44DF-88EA-8B9A6311174C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

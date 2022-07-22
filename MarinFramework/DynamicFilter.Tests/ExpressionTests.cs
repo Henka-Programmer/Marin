@@ -113,13 +113,18 @@ AND or A B or C or D E
         public void Test_Expression_With_Complex_Condition()
         {
             var date1 = new DateTime(1991, 1, 1, 1, 1, 1);
-            var date2 = new DateTime(1992, 2, 2, 2, 2, 2); // 
+            var date2 = new DateTime(1992, 2, 2, 2, 2, 2);
             var domain = new SearchDomain("|", "&", ("Birthday", "=", date1), ("Name", "=", "Henka"), "&" ,("Birthday", "=", date2), ("Name", "=", "Henka2"));
             var expression = new Expression(domain, model!, model!.Table);
 
             var (queryStr, parameters) = expression.Query.Select();
 
-            Assert.AreEqual("SELECT * FROM [users] WHERE ([users].[Birthday] = @pName1 AND [users].[Birthday] = @pBirthday1) OR ([users].[Birthday] = @pName2 AND [users].[Birthday] = @pBirthday2)", queryStr);
+            Assert.AreEqual("SELECT * FROM [users] WHERE (([users].[Birthday] = @pBirthday2 AND ([users].[Name] = @pName2)) OR ([users].[Birthday] = @pBirthday AND ([users].[Name] = @pName)))", queryStr);
+            Assert.AreEqual(4, parameters.Length);
+            Assert.AreEqual(date1, parameters[0].Value);
+            Assert.AreEqual("Henka", parameters[1].Value);
+            Assert.AreEqual(date2, parameters[2].Value);
+            Assert.AreEqual("Henka2", parameters[3].Value);
         }
     }
 }

@@ -53,7 +53,7 @@ namespace DynamicFilter
 
         public SearchDomain Normalize()
         {
-            if (this.Count == 0)
+            if (Count == 0)
             {
                 return DomainOperators.TRUE_LEAF;
             }
@@ -80,7 +80,7 @@ namespace DynamicFilter
                 }
                 else
                 {
-                    expected += operatorsArity.Get(token.ToString(), 0) - 1;
+                    expected += operatorsArity.Get(token.ToString()!, 0) - 1;
                 }
 
                 result.Add(token);
@@ -183,9 +183,8 @@ namespace DynamicFilter
                 count++;
             }
 
-            var length = count - 1;
-            result = length >= 1 
-                ? (new SearchDomain(Enumerable.Repeat(op, length).ToArray()) + result)
+            result = count-1 > 0
+                ? (new SearchDomain(Enumerable.Repeat(op, count-1).ToArray()) + result)
                 : result;
 
             return result.Count == 0 ? unitDomain : result;
@@ -299,6 +298,59 @@ namespace DynamicFilter
         public override bool Equals(object obj)
         {
             return ReferenceEquals(this, obj) || (obj is SearchDomain other && this.SequenceEqual(other));
+        }
+
+        public static bool Equals(SearchDomain? domain, SearchDomain? other)
+        {
+            if ((domain == null && other == null) || ReferenceEquals(domain, other))
+            {
+                return true;
+            }
+
+            if (domain == null || other == null)
+            {
+                return false;
+            }
+
+            if (domain!.Count != other!.Count)
+            {
+                return false;
+            }
+
+            if (domain.Count == 0 && other.Count == 0)
+            {
+                return true;
+            }
+
+            return domain.Zip(other, (d, o) => 
+                                            {
+                                                if ((d == null && o == null) || ReferenceEquals(d, o))
+                                                {
+                                                    return true;
+                                                }
+
+                                                if (d == null || o == null)
+                                                {
+                                                    return false;
+                                                }
+
+                                                if (d is Term dterm && o is Term oterm)
+                                                {
+                                                    return dterm.Equals(oterm);
+                                                }
+
+                                                if (d is System.Runtime.CompilerServices.ITuple tupleD && o is System.Runtime.CompilerServices.ITuple tupleO && tupleD.Length == tupleO.Length)
+                                                {
+                                                    var result = true;
+                                                    for(int i = 0; i < tupleD.Length-1; i++)
+                                                    {
+                                                        result = result && (tupleD[i] == tupleO[i]);
+                                                    }
+                                                    return result;
+                                                }
+
+                                                return d == o;
+                                            }).All(v => v);
         }
     }
 }

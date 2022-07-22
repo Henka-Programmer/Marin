@@ -38,9 +38,9 @@ namespace DynamicFilterTests
             var d1 = new SearchDomain(("foo", "=", 1), ("bar", "=", 1));
             var d2 = new SearchDomain("&", ("foo", "=", 2), ("bar", "=", 2));
 
-            var expected = new SearchDomain("|", "&", ("foo", "=", 1), ("bar", "=", 1), "|", ("foo", "=", 2), ("bar", "=", 2));
-
-            Assert.IsTrue(expected.Equals(SearchDomain.OR(d1, d2)));
+            var expected = new SearchDomain("|", "&", ("foo", "=", 1), ("bar", "=", 1), "&", ("foo", "=", 2), ("bar", "=", 2));
+            var orDomain = SearchDomain.OR(d1, d2);
+            Assert.IsTrue(expected.Equals(orDomain));
         }
 
         /// <summary>

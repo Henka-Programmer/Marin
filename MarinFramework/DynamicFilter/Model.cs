@@ -11,7 +11,7 @@ namespace DynamicFilter
         public Model(string table, string? tableQuery = null)
         {
             Table = table;
-            TableQuery = tableQuery;
+            TableQuery = tableQuery ?? table;
         }
     }
 }

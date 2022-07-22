@@ -11,10 +11,10 @@ namespace DynamicFilter
         /// Holds the list of tables joined using default JOIN.
         /// the table names are stored double-quoted
         /// </summary>        
-        private readonly StringDictionary _tables = new StringDictionary();
-        private readonly Dictionary<string, (string kind, string table, string condition, QueryParameter[] parameters)> _joins = new Dictionary<string, (string kind, string rhsTable, string conditiona, QueryParameter[] p)>();
-        private readonly List<string> _whereClauses = new List<string>();
-        private readonly List<QueryParameter> _whereClauseParams = new List<QueryParameter>();
+        private readonly Dictionary<string, string> _tables = new (StringComparer.InvariantCultureIgnoreCase);
+        private readonly Dictionary<string, (string kind, string table, string condition, QueryParameter[] parameters)> _joins = new (StringComparer.InvariantCultureIgnoreCase);
+        private readonly List<string> _whereClauses = new();
+        private readonly List<QueryParameter> _whereClauseParams = new();
 
         public int? Limit { get; set; }
         public int? Offset { get; set; }
@@ -177,7 +177,7 @@ namespace DynamicFilter
 
         private string FromTable(string table, string alias)
         {
-            if (alias == table)
+            if (string.Equals(alias, table, StringComparison.OrdinalIgnoreCase))
             {
                 return $"[{alias}]";
             }

@@ -10,15 +10,19 @@ namespace DynamicFilter
         private readonly SearchDomain _expression;
         private readonly string? _rootAlias;
         private readonly Model _rootModel;
+        private QueryParameterList _params = new();
 
         public Query Query { get; private set; }
+        public (string query, QueryParameter[] @params) Result { get; private set; }
 
         public Expression(SearchDomain domain, Model model, string? alias = null, Query? query = null)
         {
             Query = query ?? new Query(model.Table, model.TableQuery);
             _expression = SearchDomain.DistributeNot(domain.Normalize());
-            _rootAlias = alias;
+            _rootAlias = alias ?? model.Table;
             _rootModel = model;
+
+            Result = (string.Empty, Array.Empty<QueryParameter>());
 
             // parse the domain expression
             Parse();
@@ -40,8 +44,8 @@ namespace DynamicFilter
 
         public void Parse()
         {
+            _params = new();
             var stack = new TermStack();
-
             foreach (var leaf in _expression)
             {
                 stack.Push((leaf, _rootModel, _rootAlias));
@@ -122,7 +126,8 @@ namespace DynamicFilter
                         //}
                         right = DateOnly.Parse(str);
                         stack.Push(((left, @operator, right), model, alias));
-                    } else if (right is DateTime dt && dt.TimeOfDay == TimeSpan.Zero)
+                    }
+                    else if (right is DateTime dt && dt.TimeOfDay == TimeSpan.Zero)
                     {
                         //if (@operator == ">" || @operator == "<=")
                         //{
@@ -138,7 +143,7 @@ namespace DynamicFilter
                         resultStack.Push(leafToSql);
                     }
                 }
-                else if (right != null)
+                else //if (right != null)
                 {
                     var leafToSql = LeafToSql(leaf, model, alias);
                     resultStack.Push(leafToSql);
@@ -147,13 +152,12 @@ namespace DynamicFilter
 
             if (resultStack.Count > 0)
             {
-                this.Result = resultStack.Pop();
+                Result = resultStack.Pop();
             }
 
             Query.AddWhere(Result.query, Result.@params);
         }
 
-        public (string query, QueryParameter[] @params) Result { get; private set; }
 
         private (string, QueryParameter[]) LeafToSql(object leaf, Model model, string alias)
         {
@@ -164,7 +168,7 @@ namespace DynamicFilter
 
             var checkNull = false;
             var (left, @operator, right) = term;
-
+            QueryParameter[] @params = Array.Empty<QueryParameter>();
             if (left == null)
             {
                 throw new InvalidOperationException($"Invalid term with invalid left: ({left},{@operator},{right})");
@@ -172,25 +176,24 @@ namespace DynamicFilter
 
             var tableAlias = $"{alias}";
             var query = "";
-            QueryParameter[] @params;
 
             if (term == DomainOperators.TRUE_LEAF)
             {
                 query = "TRUE";
-                @params = Array.Empty<QueryParameter>();
             }
             else if (term == DomainOperators.FALSE_LEAF)
             {
                 query = "FLASE";
-                @params = Array.Empty<QueryParameter>();
-            }else if (@operator == "in" || @operator == "not in")
+            }
+            else if (@operator == "in" || @operator == "not in")
             {
                 if (right is Query rq)
                 {
                     var (subQuery, subParams) = rq.Subselect();
                     query = $"([{tableAlias}].[{left}] ({subQuery}))";
-                    @params = subParams;
-                }else if (right is IList list)
+                    _params.Append(subParams);
+                }
+                else if (right is IList list)
                 {
                     var column = model.Columns.Get(left.ToString()!);
                     if (column == null)
@@ -204,13 +207,14 @@ namespace DynamicFilter
                     }
                     else
                     {
-                        @params = QueryParameter.GetQueryParameters(left.ToString()!, column.Type, list.Cast<object>().Where(x => x != null).ToArray()).ToArray();
-                        checkNull = @params.Length < list.Count;
+                        //@params = QueryParameter.GetQueryParameters(left.ToString()!, column.Type, list.Cast<object>().Where(x => x != null).ToArray()).ToArray();
+                        @params = _params.Create(left.ToString()!, column.Type, list.Cast<object>().Where(x => x != null).ToArray()).ToArray();
+                        checkNull = _params.Count < list.Count;
                     }
 
-                    if (@params.Length > 0)
+                    if (_params.Count > 0)
                     {
-                        var inStr = string.Join(", ", @params.Select(x => $"@{x.Name}"));
+                        var inStr = string.Join(", ", _params.Select(x => $"@{x.Name}"));
                         query = $"([{tableAlias}].[{left}] {@operator} ({inStr}))";
                     }
                     else
@@ -222,7 +226,8 @@ namespace DynamicFilter
                     if ((@operator == "in" && checkNull) || (@operator == "not in" && !checkNull))
                     {
                         query = $"{query} OR [{tableAlias}].[{left}] IS NULL";
-                    } else if (@operator == "not in" && checkNull)
+                    }
+                    else if (@operator == "not in" && checkNull)
                     {
                         query = $"{query} AND [{tableAlias}].[{left}] IS NOT NULL";
                     }
@@ -232,13 +237,15 @@ namespace DynamicFilter
                     // Must not happened
                     throw new InvalidOperationException("Invalid domain term");
                 }
-            }else if (model.Columns.TryGetValue(left.ToString()!, out Column? col) && col.Type == typeof(bool) && ((@operator == "=" && right is bool b && !b) || (@operator == "!=" && right is bool br && br)))
+            }
+            else if (model.Columns.TryGetValue(left.ToString()!, out Column? col) && col.Type == typeof(bool) && ((@operator == "=" && right is bool b && !b) || (@operator == "!=" && right is bool br && br)))
             {
                 query = $"([{tableAlias}].[{left}] IS NULL OR [{tableAlias}].[{left}] = FALSE )";
                 @params = Array.Empty<QueryParameter>();
-            }else if ((right == null || right is bool rightBool && !rightBool) && @operator == "=")
+            }
+            else if ((right == null || right is bool rightBool && !rightBool) && @operator == "=")
             {
-                query = $"[{tableAlias}].[{left}] ";
+                query = $"[{tableAlias}].[{left}] IS NULL";
                 @params = Array.Empty<QueryParameter>();
             }
             else if (col != null && col.Type == typeof(bool) && ((@operator == "!=" && right is bool b2 && !b2) || (@operator == "!=" && right is bool b3 && b3)))
@@ -250,32 +257,34 @@ namespace DynamicFilter
             {
                 query = $"[{tableAlias}].[{left}] IS NOT NULL";
                 @params = Array.Empty<QueryParameter>();
-            }else if (col != null && col.Type == typeof(DateTime))
+            }
+            else if (col != null && col.Type == typeof(DateTime))
             {
-                var parameter = new QueryParameter(left.ToString()!, col.Type, right);
+                var parameter = _params.Create(left.ToString()!, col.Type, right);  //new QueryParameter(left.ToString()!, col.Type, right);
                 query = $"[{tableAlias}].[{left}] {@operator} @{parameter.Name}";
                 if (right is DateOnly dateOnly)
                 {
                     query = $"CONVERT(DATE, [{tableAlias}].[{left}]) {@operator} @{parameter.Name}";
 
                     // convert back the value to Datetime, as the DateOnly not supported in Mapping to SQL datatypes.
-                    parameter = new QueryParameter(left.ToString()!, col.Type, dateOnly.ToDateTime(TimeOnly.MinValue));
+                    // parameter = new QueryParameter(left.ToString()!, col.Type, dateOnly.ToDateTime(TimeOnly.MinValue));
+                    parameter.Value = dateOnly.ToDateTime(TimeOnly.MinValue);
                 }
 
                 @params = new QueryParameter[] { parameter };
-
-            }else
+            }
+            else
             {
                 var needWildcard = @operator == "like" || @operator == "ilike" || @operator == "not like" || @operator == "not ilike";
-                
+
                 if (col == null)
                 {
                     throw new InvalidOperationException($"Invalid field in domain term ({left}, {leaf})");
                 }
 
                 var column = $"[{tableAlias}].[{left}]";
-                var rightParameterName = $"p{left}";
-                query = $"({column} {@operator} @{rightParameterName})";
+                var rightParameter = _params.Create(left.ToString() ?? string.Empty, col.Type, right?.ToString());
+                query = $"({column} {@operator} @{rightParameter.Name})";
 
                 if ((needWildcard && right == null) || (right != null && DomainOperators.NEGATIVE_TERM_OPERATORS.Contains(@operator)))
                 {
@@ -284,12 +293,13 @@ namespace DynamicFilter
 
                 if (needWildcard)
                 {
-                    @params = new QueryParameter[] { new QueryParameter(rightParameterName, col.Type, $"%{right}%") };
+                    rightParameter.Value = $"%{rightParameter.Value}%";
                 }
-                else
+
+                @params = new QueryParameter[]
                 {
-                    @params = new QueryParameter[] { new QueryParameter(rightParameterName, col.Type, right?.ToString()) };
-                }
+                    rightParameter
+                };
             }
 
             return (query, @params);
