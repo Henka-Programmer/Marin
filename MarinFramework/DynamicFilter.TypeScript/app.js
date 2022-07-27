@@ -6,6 +6,8 @@ const term2 = ['age', '>', 25];
 const term3 = ['birthday', '=', new Date(2022, 2, 1)];
 const domain1 = ['|', term1, term2, '&', term3];
 const domain2 = ['&', term1, term2, '&', ['city', '=', 'Malaga']];
-const domain3 = [domain1, domain2];
-console.log((0, domain_1.toJson)(domain3));
+const domain3 = ['|', domain1, domain2];
+//console.log(toJson(domain3));
+//console.log(toJson(term1));
+console.log((0, domain_1.isDomain)(['|', ['B', '<', 0, 2]]));
 //# sourceMappingURL=app.js.map
