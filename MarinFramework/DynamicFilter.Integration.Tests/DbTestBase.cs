@@ -30,11 +30,12 @@ namespace DynamicFilter.Integration.Tests
         //                        .Options;
         //    return new TestDbContext(options);
         //}
-
+        protected string connectionString { get; private set; }
+            = $"Data Source=ahenka.local;Initial Catalog=DynamicFilter_TestDB_{Guid.NewGuid()};User ID=sa;Password=sa@Sql2019;MultipleActiveResultSets=True;TrustServerCertificate=True;";
         protected virtual TestDbContext GetDbContext()
         {
             var options = new DbContextOptionsBuilder<TestDbContext>()
-                                .UseSqlServer($"Data Source=ahenka.local;Initial Catalog=DynamicFilter_TestDB_{Guid.NewGuid()};User ID=sa;Password=sa@Sql2019;MultipleActiveResultSets=True;")
+                                .UseSqlServer(connectionString)
                                 .Options;
             
             //var builder = new DbContextOptionsBuilder<TestDbContext>();

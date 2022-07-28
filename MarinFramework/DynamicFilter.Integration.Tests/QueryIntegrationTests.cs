@@ -1,12 +1,76 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using DynamicFilter.SqlServer;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DynamicFilter.Integration.Tests
 {
     [TestClass]
+    public class TableMetadataProviderTests : DbTestBase
+    {
+        [TestMethod]
+        public void Get_Table_Metadat()
+        {
+            // creating db context to ensure that the db is created.
+            using (var context = GetDbContext())
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    var sqlServerProvider = new TableMetadataProvider(connection);
+                    var testTableMetadata = sqlServerProvider.GetTablesMetadata("testTable")[0];
+
+                    Assert.AreEqual("testTable", testTableMetadata.TableName);
+                    Assert.AreEqual(7, testTableMetadata.Columns.Count);
+
+                    var ID = testTableMetadata.Columns.FirstOrDefault(x => x.Name == "ID");
+                    var StringProperty = testTableMetadata.Columns.FirstOrDefault(x => x.Name == "StringProperty");
+                    var DecimalProperty = testTableMetadata.Columns.FirstOrDefault(x => x.Name == "DecimalProperty");
+                    var DateTimeProperty = testTableMetadata.Columns.FirstOrDefault(x => x.Name == "DateTimeProperty");
+                    var DoubleProperty = testTableMetadata.Columns.FirstOrDefault(x => x.Name == "DoubleProperty");
+                    var BooleanProperty = testTableMetadata.Columns.FirstOrDefault(x => x.Name == "BooleanProperty");
+                    var NullableIntegerProperty = testTableMetadata.Columns.FirstOrDefault(x => x.Name == "NullableIntegerProperty");
+
+                    Assert.IsNotNull(ID);
+                    Assert.IsNotNull(StringProperty);
+                    Assert.IsNotNull(DecimalProperty);
+                    Assert.IsNotNull(DateTimeProperty);
+                    Assert.IsNotNull(DoubleProperty);
+                    Assert.IsNotNull(BooleanProperty);
+                    Assert.IsNotNull(NullableIntegerProperty);
+
+                    Assert.AreEqual(typeof(int), ID.Type);
+                    Assert.AreEqual(typeof(string), StringProperty.Type);
+                    Assert.AreEqual(typeof(decimal), DecimalProperty.Type);
+                    Assert.AreEqual(typeof(DateTime), DateTimeProperty.Type);
+                    Assert.AreEqual(typeof(double), DoubleProperty.Type);
+                    Assert.AreEqual(typeof(bool), BooleanProperty.Type);
+                    Assert.AreEqual(typeof(int?), NullableIntegerProperty.Type); 
+
+                }
+            }
+        }
+
+        [TestMethod]
+        public void Get_Table_Metadat_MultipleTables_With_Names()
+        {
+            // creating db context to ensure that the db is created.
+            using (var context = GetDbContext())
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    var sqlServerProvider = new TableMetadataProvider(connection);
+                    var tablesMetadata = sqlServerProvider.GetTablesMetadata("testTable", "users");
+
+                    Assert.IsNotNull(tablesMetadata);
+                    Assert.AreEqual(2, tablesMetadata.Length);
+                }
+            }
+        }
+    }
+
+    [TestClass]
     public class QueryIntegrationTests : DbTestBase
     {
-
         [TestMethod]
         public void Test_Select_Single_Item_By_ID()
         {

@@ -11,7 +11,23 @@ type TermElementTypes = string | number | Date | EnumType | undefined | boolean;
 export interface Term extends Array<TermElementTypes> { 0: string; 1: TermOperator; 2: string | number | Date | EnumType | undefined | boolean; }
 export interface Domain extends Array<DomainOperator | Domain | Term> { }
 
-export function parse(domain: Domain) {
+interface IValueNormalization extends INormalization {
+    valueType: string;
+}
+
+interface ITermNormalization {
+    type: string;
+    left: string;
+    operator: TermOperator;
+    right: IValueNormalization
+}
+
+interface INormalization {
+    type: string;
+    value: string;
+}
+
+export function parse(domain: Domain): void {
     throw new Error('Not Implemented!');
 }
 
@@ -82,25 +98,6 @@ function normalizeTerm(term: Term): ITermNormalization {
     };
 
     return normalizedTerm;
-}
-
-interface IValueNormalization extends INormalization
-{
-    valueType: string;
-}
-
-interface ITermNormalization
-{
-    type: string;
-    left: string;
-    operator: TermOperator;
-    right: IValueNormalization
-}
-
-interface INormalization
-{
-    type: string;
-    value: string;
 }
 
 function normalizeOperator(operator: DomainOperator | TermOperator): INormalization

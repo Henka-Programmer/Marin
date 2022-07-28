@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isDomain = exports.normalize = exports.toJson = exports.parse = void 0;
+exports.normalize = exports.toJson = exports.parse = void 0;
 const TERM_OPERATORS = ['=', '>', '<', '!=', '<=', '>=', 'in', 'not in', 'like'];
 const DOMAIN_OPERATORS = ['&', '|', '!'];
 function parse(domain) {
@@ -49,7 +49,6 @@ function isDomain(object) {
     const domain = object;
     return domain != null && Array.isArray(object) && domain.every((element) => isDomainOperator(element) || isTerm(element) || isDomain(element));
 }
-exports.isDomain = isDomain;
 function normalizeTerm(term) {
     const normalizedTerm = {
         type: 'Term',

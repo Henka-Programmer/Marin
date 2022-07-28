@@ -15,6 +15,7 @@ namespace DynamicFilter.Integration.Tests
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.LogTo(Console.WriteLine);
 
         public DbSet<TestModel> Models { get; set; }
+        public DbSet<User> Users { get; set; }
 
         public override void Dispose()
         {

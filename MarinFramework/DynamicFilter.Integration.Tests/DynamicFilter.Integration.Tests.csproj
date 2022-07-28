@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DynamicFilter.SqlServer\DynamicFilter.SqlServer.csproj" />
     <ProjectReference Include="..\DynamicFilter\DynamicFilter.csproj" />
   </ItemGroup>
 
