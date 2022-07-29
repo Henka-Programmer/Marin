@@ -120,6 +120,9 @@
   <data name="TABLE_METADATA_FILTER" xml:space="preserve">
     <value> AND TBL.TABLE_NAME = @tableName</value>
   </data>
+  <data name="TABLE_METADATA_FILTER_IN_FORMAT" xml:space="preserve">
+    <value>AND TBL.TABLE_NAME IN ({0})</value>
+  </data>
   <data name="TABLE_METADATA_SQL2019_QUERY" xml:space="preserve">
     <value>SELECT TBL.TABLE_NAME,
        COL.COLUMN_NAME,

@@ -70,6 +70,15 @@ namespace DynamicFilter.SqlServer.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to AND TBL.TABLE_NAME IN ({0}).
+        /// </summary>
+        internal static string TABLE_METADATA_FILTER_IN_FORMAT {
+            get {
+                return ResourceManager.GetString("TABLE_METADATA_FILTER_IN_FORMAT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to SELECT TBL.TABLE_NAME,
         ///       COL.COLUMN_NAME,
         ///       COL.DATA_TYPE,

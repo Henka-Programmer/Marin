@@ -19,7 +19,7 @@ namespace DynamicFilter.Integration.Tests
 
         public override void Dispose()
         {
-            Database.EnsureDeleted();
+            //Database.EnsureDeleted();
             base.Dispose();
         }
     }

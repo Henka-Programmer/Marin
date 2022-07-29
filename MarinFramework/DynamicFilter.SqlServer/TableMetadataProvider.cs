@@ -17,7 +17,7 @@ namespace DynamicFilter.SqlServer
             try
             {
                 _dbConnection.Open();
-                using var sqlCommand = CreateDbCommand();
+                using var sqlCommand = CreateDbCommand(tablesNames);
                 using var dataReader = sqlCommand.ExecuteReader();
                 return BuildMetadata(dataReader, tablesNames);
             }
@@ -90,7 +90,7 @@ namespace DynamicFilter.SqlServer
                     var tableNameParameter = new SqlParameter($"tableName_{i}", pName);
                     sqlCommand.Parameters.Add(tableNameParameter);
                 }
-                sqlCommand.CommandText += $" IN ({string.Join(", ", sqlCommand.Parameters.Cast<SqlParameter>().Select(x => x.ParameterName))})";
+                sqlCommand.CommandText += string.Format(Resources.TABLE_METADATA_FILTER_IN_FORMAT, string.Join(", ", sqlCommand.Parameters.Cast<SqlParameter>().Select(x => $"@{x.ParameterName}")));
             }
             return sqlCommand;
         }

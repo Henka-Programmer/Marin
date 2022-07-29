@@ -1,5 +1,3 @@
-import { EnumType } from "typescript";
-
 const TERM_OPERATORS = ['=', '>', '<', '!=', '<=', '>=', 'in', 'not in', 'like'];
 const DOMAIN_OPERATORS = ['&', '|', '!'];
 
@@ -7,9 +5,39 @@ export type TermOperator = '=' | '>' | '<' | '!=' | '<=' | '>=' | 'in' | 'not in
 export type DomainOperator = '&' | '|' | '!';
 export type Operator = TermOperator & DomainOperator;
 
-type TermElementTypes = string | number | Date | EnumType | undefined | boolean;
-export interface Term extends Array<TermElementTypes> { 0: string; 1: TermOperator; 2: string | number | Date | EnumType | undefined | boolean; }
+type TermElementTypes = string | number | Date | undefined | boolean;
+export interface Term extends Array<TermElementTypes> { 0: string; 1: TermOperator; 2: string | number | Date | undefined | boolean; }
 export interface Domain extends Array<DomainOperator | Domain | Term> { }
+
+
+interface IFilterElement
+{
+    type: 'operator' | 'term' | 'value' | 'domain';
+    value: IFilterTerm | Operator | IFilterElement | IFilterTermValue | Array<IFilter>;
+}
+
+interface IFilterTerm
+{
+    left: string;
+    operator: TermOperator;
+    right: IFilterTermValue
+}
+
+interface IFilterTermValue
+{
+    type: string;
+    value: TermElementTypes;
+}
+
+interface IFilter {
+    type: string;
+    value: Array<IFilter | IFilterElement >
+}
+
+interface INormalization {
+    type: string;
+    value: string;
+}
 
 interface IValueNormalization extends INormalization {
     valueType: string;
@@ -22,23 +50,58 @@ interface ITermNormalization {
     right: IValueNormalization
 }
 
-interface INormalization {
-    type: string;
-    value: string;
-}
-
 export function parse(domain: Domain): void {
     throw new Error('Not Implemented!');
 }
 
-export function toJson(element: Domain | Term): string {
+export function toJson(element: Domain): string {
+    return JSON.stringify(toFilter(element));
+}
 
-    if (isTerm(element))
-    {
-        return JSON.stringify(normalizeTerm(element)); 
+export function toFilter(domain: Domain): IFilter
+{
+    const result: IFilter =
+        {
+            type: 'domain',
+            value: []
+        } as IFilter;
+
+    for (const element of domain) {
+        if (typeof element === 'string' && isDomainOperator(element)) {
+            result.value.push({ type: 'operator', value: element as Operator } as IFilterElement);
+            continue;
+        }
+
+        if (isTerm(element)) {
+            result.value.push({
+                type: 'term',
+                value: {
+                    left: element[0],
+                    operator: element[1],
+                    right: {
+                        type: element[2] instanceof Date ? "date" : typeof element[1],
+                        value: element[2] instanceof Date ? element[2].toISOString() : element[2]
+                    } as IFilterTermValue
+                } as IFilterTerm
+            } as IFilterElement);
+            continue;
+        }
+
+        if (isDomain(element)) {
+            result.value.push(toFilter(element));
+            continue;
+        }
+
+        throw new Error('invalid domain!');
     }
 
-    return JSON.stringify(normalize(element));
+    return result;
+}
+
+const isoDateRegex = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*))(?:Z|(\+|-)([\d|:]*))?$/;
+
+function isIsoDate(value) {
+    return isoDateRegex.exec(value);
 }
 
 export function normalize(domain: Domain): Object[] {

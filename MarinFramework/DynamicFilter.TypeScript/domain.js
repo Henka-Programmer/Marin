@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.normalize = exports.toJson = exports.parse = void 0;
+exports.normalize = exports.toFilter = exports.toJson = exports.parse = void 0;
 const TERM_OPERATORS = ['=', '>', '<', '!=', '<=', '>=', 'in', 'not in', 'like'];
 const DOMAIN_OPERATORS = ['&', '|', '!'];
 function parse(domain) {
@@ -8,12 +8,46 @@ function parse(domain) {
 }
 exports.parse = parse;
 function toJson(element) {
-    if (isTerm(element)) {
-        return JSON.stringify(normalizeTerm(element));
-    }
-    return JSON.stringify(normalize(element));
+    return JSON.stringify(toFilter(element));
 }
 exports.toJson = toJson;
+function toFilter(domain) {
+    const result = {
+        type: 'domain',
+        value: []
+    };
+    for (const element of domain) {
+        if (typeof element === 'string' && isDomainOperator(element)) {
+            result.value.push({ type: 'operator', value: element });
+            continue;
+        }
+        if (isTerm(element)) {
+            result.value.push({
+                type: 'term',
+                value: {
+                    left: element[0],
+                    operator: element[1],
+                    right: {
+                        type: element[2] instanceof Date ? "date" : typeof element[1],
+                        value: element[2] instanceof Date ? element[2].toISOString() : element[2]
+                    }
+                }
+            });
+            continue;
+        }
+        if (isDomain(element)) {
+            result.value.push(toFilter(element));
+            continue;
+        }
+        throw new Error('invalid domain!');
+    }
+    return result;
+}
+exports.toFilter = toFilter;
+const isoDateRegex = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*))(?:Z|(\+|-)([\d|:]*))?$/;
+function isIsoDate(value) {
+    return isoDateRegex.exec(value);
+}
 function normalize(domain) {
     const result = [];
     for (const element of domain) {

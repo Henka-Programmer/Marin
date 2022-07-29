@@ -2,9 +2,9 @@
 
 namespace DynamicFilter
 {
-    public class Term : Tuple<object, string, object>
+    public class Term : Tuple<object, string, object?>
     {
-        public Term(object item1, string item2, object item3) : base(item1, item2, item3)
+        public Term(object item1, string item2, object? item3) : base(item1, item2, item3)
         {
         }
 
